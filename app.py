@@ -2,37 +2,32 @@ import streamlit as st
 from transformers import DistilBertTokenizer, DistilBertForSequenceClassification
 import torch
 
-# Set page config
-st.set_page_config(page_title="Fake News Detector", page_icon="📰")
-st.title("📰 Fake News Detector")
-st.markdown("""
-Built with **DistilBERT** fine-tuned on a fake news dataset  
-Model: [`mrm8488/distilbert-base-uncased-finetuned-fake-news`](https://huggingface.co/mrm8488/distilbert-base-uncased-finetuned-fake-news)
-""")
+# UI setup
+st.set_page_config(page_title="Text Classifier", page_icon="🧠")
+st.title("🧠 Text Emotion Classifier (DistilBERT Demo)")
+st.markdown("Model: `bhadresh-savani/distilbert-base-uncased-emotion` (for demo)")
 
-# Load model and tokenizer with spinner
+# Load model
 @st.cache_resource
 def load_model():
-    with st.spinner("🔄 Loading model and tokenizer... please wait"):
-        tokenizer = DistilBertTokenizer.from_pretrained("mrm8488/distilbert-base-uncased-finetuned-fake-news")
-        model = DistilBertForSequenceClassification.from_pretrained("mrm8488/distilbert-base-uncased-finetuned-fake-news")
+    tokenizer = DistilBertTokenizer.from_pretrained("bhadresh-savani/distilbert-base-uncased-emotion")
+    model = DistilBertForSequenceClassification.from_pretrained("bhadresh-savani/distilbert-base-uncased-emotion")
     return tokenizer, model
 
 tokenizer, model = load_model()
 
-# Input section
-st.markdown("#### ✍️ Enter the news article text:")
-text = st.text_area("", height=200, placeholder="Type or paste news content here...")
+# Input text
+text = st.text_area("✍️ Enter text (e.g., news content, tweet, etc.)", height=200)
 
-if st.button("🔍 Detect"):
+if st.button("🔍 Predict"):
     if not text.strip():
-        st.warning("⚠️ Please enter some text to analyze.")
+        st.warning("Please enter some text.")
     else:
-        with st.spinner("🧠 Analyzing with DistilBERT..."):
+        with st.spinner("Analyzing..."):
             inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True)
             with torch.no_grad():
                 outputs = model(**inputs)
-                prediction = torch.argmax(outputs.logits, dim=1).item()
+                pred = torch.argmax(outputs.logits, dim=1).item()
 
-        label = "❌ FAKE NEWS" if prediction == 1 else "✅ REAL NEWS"
-        st.success(f"**Prediction:** {label}")
+        # You can customize label mapping if known
+        st.success(f"Predicted Class ID: `{pred}`")
