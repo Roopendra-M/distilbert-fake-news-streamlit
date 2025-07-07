@@ -1,33 +1,30 @@
 import streamlit as st
-from transformers import DistilBertTokenizer, DistilBertForSequenceClassification
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 
-# UI setup
-st.set_page_config(page_title="Text Classifier", page_icon="🧠")
-st.title("🧠 Text Emotion Classifier (DistilBERT Demo)")
-st.markdown("Model: `bhadresh-savani/distilbert-base-uncased-emotion` (for demo)")
+st.set_page_config(page_title="Fake News Detector", page_icon="📰")
+st.title("📰 Fake News Detector")
+st.markdown("Model: **Pulk17/Fake-News-Detection** (BERT fine-tuned, ~99.6% accuracy)")
 
-# Load model
 @st.cache_resource
 def load_model():
-    tokenizer = DistilBertTokenizer.from_pretrained("bhadresh-savani/distilbert-base-uncased-emotion")
-    model = DistilBertForSequenceClassification.from_pretrained("bhadresh-savani/distilbert-base-uncased-emotion")
+    model_name = "Pulk17/Fake-News-Detection"
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModelForSequenceClassification.from_pretrained(model_name)
     return tokenizer, model
 
 tokenizer, model = load_model()
 
-# Input text
-text = st.text_area("✍️ Enter text (e.g., news content, tweet, etc.)", height=200)
+text = st.text_area("Enter news text here:", height=200, placeholder="Paste article or headline...")
 
-if st.button("🔍 Predict"):
+if st.button("🔍 Detect"):
     if not text.strip():
         st.warning("Please enter some text.")
     else:
-        with st.spinner("Analyzing..."):
-            inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True)
+        with st.spinner("🧠 Analyzing..."):
+            inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
             with torch.no_grad():
-                outputs = model(**inputs)
-                pred = torch.argmax(outputs.logits, dim=1).item()
-
-        # You can customize label mapping if known
-        st.success(f"Predicted Class ID: `{pred}`")
+                logits = model(**inputs).logits
+                pred = torch.argmax(logits, dim=1).item()
+        label = "❌ FAKE" if pred == 1 else "✅ REAL"
+        st.success(f"**Prediction:** {label}")
