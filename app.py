@@ -8,15 +8,15 @@ import matplotlib.pyplot as plt
 st.set_page_config(page_title="📰 Fake News Detector", page_icon="🧠")
 st.title("📰 Fake News Detector")
 st.markdown("""
-Model: **[mrm8488/bert-tiny-finetuned-fake-news](https://huggingface.co/mrm8488/bert-tiny-finetuned-fake-news)**  
-BERT-based model fine-tuned on fake news dataset  
+Model: **[Pulk17/Fake-News-Detection](https://huggingface.co/Pulk17/Fake-News-Detection)**  
+Fine-tuned BERT model for detecting fake news.  
 Paste news text or upload a file to detect fake content.
 """)
 
-# Load model and tokenizer
+# Load model + tokenizer
 @st.cache_resource
 def load_model():
-    model_name = "mrm8488/bert-tiny-finetuned-fake-news"
+    model_name = "Pulk17/Fake-News-Detection"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForSequenceClassification.from_pretrained(model_name)
     return tokenizer, model
@@ -49,11 +49,11 @@ with st.sidebar:
     elif example_type == "Fake News":
         example_choice = st.selectbox("Select Fake News Example", fake_examples)
 
-# Text session state
+# Session state for input
 if "text_input" not in st.session_state:
     st.session_state["text_input"] = ""
 
-# Set input from uploaded file or selected example
+# Load selected example
 if uploaded_file:
     st.session_state["text_input"] = uploaded_file.read().decode("utf-8")
 elif example_choice:
@@ -69,7 +69,7 @@ with st.sidebar:
         st.write("📝 Words:", len(text.split()))
         st.write("🔡 Characters:", len(text))
 
-# Detection
+# Predict button
 if st.button("🔍 Detect"):
     if not text.strip():
         st.warning("⚠️ Please enter some text.")
@@ -85,7 +85,7 @@ if st.button("🔍 Detect"):
         st.success(f"**Prediction:** {label_map[pred]}")
         st.info(f"🔢 Confidence: `{probs[pred] * 100:.2f}%`")
 
-        # Confidence bar chart
+        # Confidence chart
         fig, ax = plt.subplots()
         ax.bar(["REAL", "FAKE"], probs, color=["green", "red"])
         ax.set_ylim([0, 1])
